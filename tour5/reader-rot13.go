@@ -8,28 +8,31 @@ import (
 
 type rot13Reader struct {
 	r io.Reader
+	cnt int
 }
 
-func (t *rot13Reader) Read(b []byte) (n int, err error){
-	for i, v := range b {
-		if v > 13 {
-			b[i] -= 13
-		} else {
-			b[i] += 13
-		}
+func (t *rot13Reader) Read(b []byte) (int, error) {
+	n, e := t.r.Read(b)
+	for i := 0; i < n; i++ {
+		b[i] = rot13(b[i])
 	}
-	
-	if cap(b) == 0 {
-		return 0, io.EOF
-		
-	} else {
-		return len(b), nil
+	return n, e
+}
+
+func rot13(b byte) byte {
+	//ASCII 65 is A and 90 is Z
+	if b > 64 && b < 91 {
+		b = ((b - 65 + 13) % 26) + 65
 	}
+	//ASCII 97 is a and 122 is z
+	if b > 96 && b < 123 {
+		b = ((b - 97 + 13) % 26) + 97
+	}
+	return b
 }
 
 func main() {
 	s := strings.NewReader("Lbh penpxrq gur pbqr!")
-	r := rot13Reader{s}
+	r := rot13Reader{s,0}
 	io.Copy(os.Stdout, &r)
 }
-
